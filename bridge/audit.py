@@ -1,10 +1,4 @@
-"""Append-only audit trail for write commands (MQTT -> OPC UA).
-
-Every command is recorded, accepted or not: who sent it is unknown at MQTT
-level in this prototype, so the record keeps what is known (topic, signal,
-requested value, value before the write, result, reason). Records go to a
-JSON Lines file and, optionally, to an MQTT topic for live display.
-"""
+"""Logs every write command (accepted or not) to a JSONL file and optionally to MQTT."""
 from __future__ import annotations
 
 import json

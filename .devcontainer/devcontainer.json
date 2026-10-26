@@ -13,7 +13,7 @@
     "4842": { "label": "OPC UA simulator", "onAutoForward": "silent" }
   },
   "customizations": {
-    "codespaces": { "openFiles": ["docs/DEMO_SCRIPT.md"] },
+    "codespaces": { "openFiles": ["README.md"] },
     "vscode": { "extensions": ["ms-python.python"] }
   }
 }

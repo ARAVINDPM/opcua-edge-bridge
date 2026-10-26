@@ -32,7 +32,7 @@ async def build_server(endpoint: str) -> tuple[Server, dict]:
     server.set_endpoint(endpoint)
     server.set_server_name("eFlex demo simulator (not vendor firmware)")
     # The real demo offers None + ECC_nistP256. asyncua has no ECC policies,
-    # so the simulator offers None only. See docs/SECURITY_NOTES.md.
+    # so the simulator offers None only. See README (limits).
     server.set_security_policy([ua.SecurityPolicyType.NoSecurity])
 
     idx = await server.register_namespace(NAMESPACE)
