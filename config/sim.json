@@ -1,0 +1,57 @@
+{
+  "endpoint": "opc.tcp://127.0.0.1:4842",
+  "namespace": "urn:demo:eflex-sim",
+  "root_object": "Demo",
+  "publish_interval_ms": 500,
+  "heartbeat_s": 30,
+  "topics": {
+    "prefix": "factory",
+    "site": "lab",
+    "device": "nucleo-h753zi"
+  },
+  "mqtt": {
+    "host": "localhost",
+    "port": 1883,
+    "client_id": "opcua-edge-bridge"
+  },
+  "signals": [
+    {
+      "name": "sample_01",
+      "browse_path": "SampleVariables/Sample_01",
+      "dtype": "int"
+    },
+    {
+      "name": "sample_02",
+      "browse_path": "SampleVariables/Sample_02",
+      "dtype": "int"
+    },
+    {
+      "name": "sample_03",
+      "browse_path": "SampleVariables/Sample_03",
+      "dtype": "int"
+    },
+    {
+      "name": "led_1",
+      "browse_path": "LED_1",
+      "dtype": "bool",
+      "writable": true
+    },
+    {
+      "name": "di_1",
+      "browse_path": "IO/DI_1",
+      "dtype": "bool"
+    },
+    {
+      "name": "do_1",
+      "browse_path": "IO/DO_1",
+      "dtype": "bool",
+      "writable": true
+    },
+    {
+      "name": "memory_usage",
+      "browse_path": "MemoryUsage",
+      "dtype": "int",
+      "deadband": 256
+    }
+  ]
+}
