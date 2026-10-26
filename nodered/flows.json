@@ -708,5 +708,47 @@
     "x": 250,
     "y": 1180,
     "z": "tab_bridge"
+  },
+  {
+    "id": "http_root",
+    "type": "http in",
+    "name": "GET /",
+    "url": "/",
+    "method": "get",
+    "upload": false,
+    "swaggerDoc": "",
+    "wires": [
+      [
+        "f_redirect"
+      ]
+    ],
+    "x": 250,
+    "y": 1240,
+    "z": "tab_bridge"
+  },
+  {
+    "id": "f_redirect",
+    "type": "function",
+    "name": "302 → /dashboard",
+    "func": "msg.statusCode = 302;\nmsg.headers = {Location: 'dashboard'};\nmsg.payload = '';\nreturn msg;",
+    "outputs": 1,
+    "wires": [
+      [
+        "http_resp"
+      ]
+    ],
+    "x": 600,
+    "y": 1300,
+    "z": "tab_bridge"
+  },
+  {
+    "id": "http_resp",
+    "type": "http response",
+    "name": "",
+    "statusCode": "",
+    "headers": {},
+    "x": 900,
+    "y": 1360,
+    "z": "tab_bridge"
   }
 ]

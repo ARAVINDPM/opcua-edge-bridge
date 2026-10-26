@@ -53,7 +53,7 @@ echo "[4/4] Starting bridge"
 "$PY" -m bridge.main --config config/sim.json > logs/bridge.log 2>&1 & PIDS+=($!)
 
 URL=http://localhost:1880/dashboard
-echo; echo "Dashboard: $URL   (Node-RED editor: http://localhost:1880)"
+echo; echo "Dashboard: $URL   (Node-RED editor: http://localhost:1880/editor)"
 echo "Audit trail file: logs/audit.jsonl   Stop: Ctrl+C"
 { (command -v open && open "$URL") || (command -v xdg-open && xdg-open "$URL"); } >/dev/null 2>&1 || true
 wait

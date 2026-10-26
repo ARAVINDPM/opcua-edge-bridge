@@ -166,6 +166,14 @@ add({"id": "in_audit", "type": "mqtt in", "name": "audit", "topic": BASE + "/aud
      "datatype": "json", "broker": "broker", "nl": False, "rap": True, "rh": 0, "inputs": 0,
      "wires": [["f_audit"]], **at(250)})
 
+# --- "/" redirects to the dashboard (handy behind Codespaces port forwarding) ---
+add({"id": "http_root", "type": "http in", "name": "GET /", "url": "/", "method": "get", "upload": False,
+     "swaggerDoc": "", "wires": [["f_redirect"]], **at(250)})
+add({"id": "f_redirect", "type": "function", "name": "302 \u2192 /dashboard",
+     "func": "msg.statusCode = 302;\nmsg.headers = {Location: 'dashboard'};\nmsg.payload = '';\nreturn msg;",
+     "outputs": 1, "wires": [["http_resp"]], **at(600)})
+add({"id": "http_resp", "type": "http response", "name": "", "statusCode": "", "headers": {}, **at(900)})
+
 for n in nodes:
     if "wires" not in n and n["type"] in ("ui-text", "ui-chart", "ui-gauge", "ui-table", "mqtt out"):
         n["wires"] = [] if n["type"] == "mqtt out" else [[]]

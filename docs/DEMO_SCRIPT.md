@@ -1,6 +1,6 @@
 # Demo walkthrough (about 5 minutes)
 
-Start everything with `./scripts/demo.sh` and open <http://localhost:1880/dashboard>. Also keep a terminal open on the repository folder.
+Start everything with `./scripts/demo.sh` and open <http://localhost:1880/dashboard>. In a Codespace the demo starts by itself; to stop the bridge there, use the terminal it runs in. Also keep a terminal open on the repository folder.
 
 ## 1. The problem (30 s)
 Machines speak OPC UA; dashboards and cloud tools speak MQTT. The bridge sits on the OT/IT boundary. That means two things go wrong here first:

@@ -1,5 +1,8 @@
 # opcua-edge-bridge
 
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/ARAVINDPM/opcua-edge-bridge?quickstart=1)
+[![ci](https://github.com/ARAVINDPM/opcua-edge-bridge/actions/workflows/ci.yml/badge.svg)](https://github.com/ARAVINDPM/opcua-edge-bridge/actions/workflows/ci.yml)
+
 **Learning prototype.** Reads data from an OPC UA server on an industrial device and publishes it to MQTT, with a guarded write-back path. Built around an STM32 NUCLEO-H753ZI evaluation board running an embedded OPC UA SDK demo, developed first against a **simulator** of that demo.
 
 > Status: bridge, simulator, tests and tools run. **Validation on the physical board is pending** (see `docs/HARDWARE_RUNBOOK.md`). Built with AI-assisted coding (Claude Code); design decisions, review, tests and documentation are mine.
@@ -37,14 +40,18 @@ OPC UA server (board or simulator) --subscription--> bridge --MQTT--> consumers 
 
 ## Live demo (one command)
 
+**Without installing anything:** click *Open in GitHub Codespaces* above (a free GitHub account is enough). The container installs everything and starts the demo, then the dashboard opens in a new browser tab. It takes about 2–3 minutes the first time.
+
+**Locally:**
+
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
 ./scripts/demo.sh            # or: make demo
 ```
 
-This starts an MQTT broker (Mosquitto if installed, otherwise Docker or the Python broker amqtt), the OPC UA simulator, a Node-RED dashboard and the bridge, then opens <http://localhost:1880/dashboard>. Ctrl+C stops everything. Needs Python 3.10+ and Node.js 18+; on macOS: `brew install node mosquitto`.
+This starts an MQTT broker (Mosquitto if installed, otherwise Docker or the Python broker amqtt), the OPC UA simulator, a Node-RED dashboard and the bridge, then opens <http://localhost:1880/dashboard> (the Node-RED editor is at `/editor`). Ctrl+C stops everything. Needs Python 3.10+ and Node.js 18+; on macOS: `brew install node mosquitto`.
 
-![Dashboard](docs/img/dashboard.png)
+![Demo: live values, a guarded write, a rejected write in the audit trail, and the bridge going OFFLINE via Last Will](docs/img/demo.gif)
 
 What the dashboard shows:
 - **Bridge status:** birth/death state from the retained `.../state` topic. Kill the bridge and it turns to OFFLINE via the MQTT Last Will. It also shows the source-to-bridge delay and the message count.
