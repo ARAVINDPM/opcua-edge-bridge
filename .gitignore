@@ -2,3 +2,9 @@ __pycache__/
 *.pyc
 .pytest_cache/
 config/board.json
+logs/
+nodered/node_modules/
+nodered/lib/
+nodered/.config.*.json
+nodered/.flows*.backup
+nodered/.flows_cred.json

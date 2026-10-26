@@ -77,6 +77,13 @@ async def test_bridge_end_to_end():
     broker.inject(topics.cmd("sample_01"), b'5')
     assert b.stats.commands_rejected == 1
 
+    # audit trail: one written, one rejected; both published on the audit topic
+    results = [(r["signal"], r["result"]) for r in b.audit.records]
+    assert ("led_1", "written") in results and ("sample_01", "rejected") in results
+    written = next(r for r in b.audit.records if r["result"] == "written")
+    assert written["previous"] is False and written["requested"] is True
+    assert sum(1 for t, _, _ in broker.messages if t == topics.audit) == len(b.audit.records)
+
     await b.stop()
     assert json.loads(broker.messages[-1][1])["online"] is False and broker.closed
     stop.set()

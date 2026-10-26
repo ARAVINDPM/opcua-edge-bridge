@@ -1,0 +1,10 @@
+{
+  "name": "opcua-edge-bridge-dashboard",
+  "private": true,
+  "description": "Node-RED dashboard for the opcua-edge-bridge demo",
+  "scripts": { "start": "node-red -u . -s settings.js flows.json" },
+  "dependencies": {
+    "node-red": "4.0.9",
+    "@flowfuse/node-red-dashboard": "1.22.0"
+  }
+}

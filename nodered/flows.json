@@ -1,0 +1,712 @@
+[
+  {
+    "id": "tab_bridge",
+    "type": "tab",
+    "label": "Edge bridge demo",
+    "disabled": false,
+    "info": "Subscribes to the bridge's MQTT topics and shows values, bridge state and the write audit trail."
+  },
+  {
+    "id": "broker",
+    "type": "mqtt-broker",
+    "name": "local broker",
+    "broker": "${MQTT_HOST}",
+    "port": "1883",
+    "clientid": "",
+    "autoConnect": true,
+    "usetls": false,
+    "protocolVersion": "4",
+    "keepalive": "30",
+    "cleansession": true,
+    "autoUnsubscribe": true
+  },
+  {
+    "id": "ui_base",
+    "type": "ui-base",
+    "name": "Edge bridge",
+    "path": "/dashboard",
+    "appIcon": "",
+    "includeClientData": true,
+    "acceptsClientConfig": [
+      "ui-notification",
+      "ui-control"
+    ],
+    "showPathInSidebar": false,
+    "headerContent": "page",
+    "navigationStyle": "none",
+    "titleBarStyle": "default",
+    "showReconnectNotification": true,
+    "notificationDisplayTime": 1,
+    "showDisconnectNotification": true
+  },
+  {
+    "id": "ui_theme",
+    "type": "ui-theme",
+    "name": "Default",
+    "colors": {
+      "surface": "#1f3a5f",
+      "primary": "#1f6feb",
+      "bgPage": "#eef1f5",
+      "groupBg": "#ffffff",
+      "groupOutline": "#cccccc"
+    },
+    "sizes": {
+      "density": "default",
+      "pagePadding": "12px",
+      "groupGap": "12px",
+      "groupBorderRadius": "4px",
+      "widgetGap": "12px"
+    }
+  },
+  {
+    "id": "ui_page",
+    "type": "ui-page",
+    "name": "OPC UA → MQTT edge bridge (learning prototype)",
+    "ui": "ui_base",
+    "path": "/",
+    "icon": "lan",
+    "layout": "grid",
+    "theme": "ui_theme",
+    "breakpoints": [
+      {
+        "name": "Default",
+        "px": "0",
+        "cols": "3"
+      },
+      {
+        "name": "Tablet",
+        "px": "576",
+        "cols": "6"
+      },
+      {
+        "name": "Desktop",
+        "px": "1024",
+        "cols": "12"
+      }
+    ],
+    "order": 1,
+    "className": "",
+    "visible": "true",
+    "disabled": "false"
+  },
+  {
+    "id": "g_status",
+    "type": "ui-group",
+    "name": "Bridge status",
+    "page": "ui_page",
+    "width": "4",
+    "height": "1",
+    "order": 1,
+    "showTitle": true,
+    "className": "",
+    "visible": "true",
+    "disabled": "false",
+    "groupType": "default"
+  },
+  {
+    "id": "g_values",
+    "type": "ui-group",
+    "name": "Process values (report by exception)",
+    "page": "ui_page",
+    "width": "8",
+    "height": "1",
+    "order": 2,
+    "showTitle": true,
+    "className": "",
+    "visible": "true",
+    "disabled": "false",
+    "groupType": "default"
+  },
+  {
+    "id": "g_write",
+    "type": "ui-group",
+    "name": "Guarded write-back",
+    "page": "ui_page",
+    "width": "4",
+    "height": "1",
+    "order": 3,
+    "showTitle": true,
+    "className": "",
+    "visible": "true",
+    "disabled": "false",
+    "groupType": "default"
+  },
+  {
+    "id": "g_audit",
+    "type": "ui-group",
+    "name": "Audit trail of write commands",
+    "page": "ui_page",
+    "width": "8",
+    "height": "1",
+    "order": 4,
+    "showTitle": true,
+    "className": "",
+    "visible": "true",
+    "disabled": "false",
+    "groupType": "default"
+  },
+  {
+    "id": "t_state",
+    "type": "ui-text",
+    "group": "g_status",
+    "order": 1,
+    "width": "0",
+    "height": "0",
+    "name": "Bridge",
+    "label": "Bridge",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": false,
+    "font": "",
+    "fontSize": 16,
+    "color": "#1f3a5f",
+    "wrapText": false,
+    "className": "",
+    "x": 900,
+    "y": 100,
+    "z": "tab_bridge",
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "t_ver",
+    "type": "ui-text",
+    "group": "g_status",
+    "order": 2,
+    "width": "0",
+    "height": "0",
+    "name": "Version",
+    "label": "Version",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": false,
+    "font": "",
+    "fontSize": 16,
+    "color": "#1f3a5f",
+    "wrapText": false,
+    "className": "",
+    "x": 900,
+    "y": 160,
+    "z": "tab_bridge",
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "f_state",
+    "type": "function",
+    "name": "state → text",
+    "func": "const p = msg.payload || {};\nreturn [{payload: p.online ? '✅ online' : '❌ OFFLINE (last will)'}, {payload: p.bridge_version || '-'}];",
+    "outputs": 2,
+    "wires": [
+      [
+        "t_state"
+      ],
+      [
+        "t_ver"
+      ]
+    ],
+    "x": 600,
+    "y": 220,
+    "z": "tab_bridge"
+  },
+  {
+    "id": "in_state",
+    "type": "mqtt in",
+    "name": "state (retained)",
+    "topic": "factory/lab/nucleo-h753zi/state",
+    "qos": "1",
+    "datatype": "json",
+    "broker": "broker",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "wires": [
+      [
+        "f_state"
+      ]
+    ],
+    "x": 250,
+    "y": 280,
+    "z": "tab_bridge"
+  },
+  {
+    "id": "c_samples",
+    "type": "ui-chart",
+    "group": "g_values",
+    "name": "samples",
+    "label": "Sample variables",
+    "order": 1,
+    "chartType": "line",
+    "category": "topic",
+    "categoryType": "msg",
+    "xAxisLabel": "",
+    "xAxisProperty": "",
+    "xAxisPropertyType": "timestamp",
+    "xAxisType": "time",
+    "xAxisFormat": "",
+    "xAxisFormatType": "auto",
+    "xmin": "",
+    "xmax": "",
+    "yAxisLabel": "count",
+    "yAxisProperty": "payload",
+    "yAxisPropertyType": "msg",
+    "ymin": "",
+    "ymax": "",
+    "bins": 10,
+    "action": "append",
+    "stackSeries": false,
+    "pointShape": "circle",
+    "pointRadius": 2,
+    "showLegend": true,
+    "removeOlder": "2",
+    "removeOlderUnit": "60",
+    "removeOlderPoints": "300",
+    "colors": [
+      "#1f6feb",
+      "#2ca02c",
+      "#ff7f0e",
+      "#d62728",
+      "#9467bd",
+      "#8c564b",
+      "#e377c2",
+      "#7f7f7f",
+      "#bcbd22"
+    ],
+    "textColor": [
+      "#666666"
+    ],
+    "textColorDefault": true,
+    "gridColor": [
+      "#e5e5e5"
+    ],
+    "gridColorDefault": true,
+    "width": "8",
+    "height": "6",
+    "className": "",
+    "interpolation": "linear",
+    "x": 900,
+    "y": 340,
+    "z": "tab_bridge",
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "g_mem",
+    "type": "ui-gauge",
+    "group": "g_values",
+    "name": "memory",
+    "order": 2,
+    "width": "4",
+    "height": "3",
+    "gtype": "gauge-half",
+    "gstyle": "needle",
+    "title": "Device memory usage",
+    "units": "bytes",
+    "icon": "",
+    "prefix": "",
+    "suffix": "",
+    "segments": [
+      {
+        "from": "0",
+        "color": "#2ca02c"
+      },
+      {
+        "from": "60000",
+        "color": "#ff7f0e"
+      },
+      {
+        "from": "80000",
+        "color": "#d62728"
+      }
+    ],
+    "min": 0,
+    "max": 100000,
+    "sizeThickness": 16,
+    "sizeGap": 4,
+    "sizeKeyThickness": 8,
+    "styleRounded": true,
+    "styleGlow": false,
+    "className": "",
+    "x": 900,
+    "y": 400,
+    "z": "tab_bridge",
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "t_delay",
+    "type": "ui-text",
+    "group": "g_status",
+    "order": 3,
+    "width": "0",
+    "height": "0",
+    "name": "Source → bridge delay",
+    "label": "Source → bridge delay",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": false,
+    "font": "",
+    "fontSize": 16,
+    "color": "#1f3a5f",
+    "wrapText": false,
+    "className": "",
+    "x": 900,
+    "y": 460,
+    "z": "tab_bridge",
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "t_count",
+    "type": "ui-text",
+    "group": "g_status",
+    "order": 4,
+    "width": "0",
+    "height": "0",
+    "name": "Messages received",
+    "label": "Messages received",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": false,
+    "font": "",
+    "fontSize": 16,
+    "color": "#1f3a5f",
+    "wrapText": false,
+    "className": "",
+    "x": 900,
+    "y": 520,
+    "z": "tab_bridge",
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "t_di",
+    "type": "ui-text",
+    "group": "g_write",
+    "order": 3,
+    "width": "0",
+    "height": "0",
+    "name": "Digital input DI_1",
+    "label": "Digital input DI_1",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": false,
+    "font": "",
+    "fontSize": 16,
+    "color": "#1f3a5f",
+    "wrapText": false,
+    "className": "",
+    "x": 900,
+    "y": 580,
+    "z": "tab_bridge",
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "sw_led",
+    "type": "ui-switch",
+    "group": "g_write",
+    "name": "LED_1",
+    "label": "LED_1 (writable)",
+    "order": 1,
+    "width": "0",
+    "height": "0",
+    "passthru": false,
+    "decouple": "true",
+    "topic": "led_1",
+    "topicType": "str",
+    "style": "",
+    "className": "",
+    "layout": "row-spread",
+    "clickableArea": "switch",
+    "onvalue": "true",
+    "onvalueType": "bool",
+    "onicon": "",
+    "oncolor": "",
+    "offvalue": "false",
+    "offvalueType": "bool",
+    "officon": "",
+    "offcolor": "",
+    "wires": [
+      [
+        "f_cmd"
+      ]
+    ],
+    "x": 900,
+    "y": 640,
+    "z": "tab_bridge"
+  },
+  {
+    "id": "sw_do",
+    "type": "ui-switch",
+    "group": "g_write",
+    "name": "DO_1",
+    "label": "DO_1 (writable)",
+    "order": 2,
+    "width": "0",
+    "height": "0",
+    "passthru": false,
+    "decouple": "true",
+    "topic": "do_1",
+    "topicType": "str",
+    "style": "",
+    "className": "",
+    "layout": "row-spread",
+    "clickableArea": "switch",
+    "onvalue": "true",
+    "onvalueType": "bool",
+    "onicon": "",
+    "oncolor": "",
+    "offvalue": "false",
+    "offvalueType": "bool",
+    "officon": "",
+    "offcolor": "",
+    "wires": [
+      [
+        "f_cmd"
+      ]
+    ],
+    "x": 900,
+    "y": 700,
+    "z": "tab_bridge"
+  },
+  {
+    "id": "f_data",
+    "type": "function",
+    "name": "route by signal",
+    "func": "const p = msg.payload || {};\nconst n = (context.get('n') || 0) + 1; context.set('n', n);\nconst out = [null, null, null, null, null, null, {payload: n}];\nconst v = {topic: p.signal, payload: p.value};\nif (p.signal && p.signal.startsWith('sample_')) {\n  out[0] = v;\n  if (p.source_ts) out[5] = {payload: Math.round((p.bridge_ts - p.source_ts) * 1000) + ' ms'};\n}\nelse if (p.signal === 'memory_usage') out[1] = v;\nelse if (p.signal === 'led_1') out[2] = {payload: !!p.value};\nelse if (p.signal === 'do_1') out[3] = {payload: !!p.value};\nelse if (p.signal === 'di_1') out[4] = {payload: p.value ? 'HIGH' : 'LOW'};\nreturn out;",
+    "outputs": 7,
+    "wires": [
+      [
+        "c_samples"
+      ],
+      [
+        "g_mem"
+      ],
+      [
+        "sw_led"
+      ],
+      [
+        "sw_do"
+      ],
+      [
+        "t_di"
+      ],
+      [
+        "t_delay"
+      ],
+      [
+        "t_count"
+      ]
+    ],
+    "x": 600,
+    "y": 760,
+    "z": "tab_bridge"
+  },
+  {
+    "id": "in_data",
+    "type": "mqtt in",
+    "name": "data/+",
+    "topic": "factory/lab/nucleo-h753zi/data/+",
+    "qos": "1",
+    "datatype": "json",
+    "broker": "broker",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "wires": [
+      [
+        "f_data"
+      ]
+    ],
+    "x": 250,
+    "y": 820,
+    "z": "tab_bridge"
+  },
+  {
+    "id": "out_cmd",
+    "type": "mqtt out",
+    "name": "cmd/<signal>",
+    "topic": "",
+    "qos": "1",
+    "retain": "false",
+    "broker": "broker",
+    "x": 1150,
+    "y": 880,
+    "z": "tab_bridge",
+    "wires": []
+  },
+  {
+    "id": "f_cmd",
+    "type": "function",
+    "name": "switch → command",
+    "func": "msg.topic = 'factory/lab/nucleo-h753zi/cmd/' + msg.topic;\nmsg.payload = JSON.stringify({value: msg.payload});\nreturn msg;",
+    "outputs": 1,
+    "wires": [
+      [
+        "out_cmd"
+      ]
+    ],
+    "x": 1150,
+    "y": 940,
+    "z": "tab_bridge"
+  },
+  {
+    "id": "b_bad",
+    "type": "ui-button",
+    "group": "g_write",
+    "name": "forbidden write",
+    "label": "Try writing read-only sample_01",
+    "order": 4,
+    "width": "0",
+    "height": "0",
+    "emulateClick": false,
+    "tooltip": "Should be rejected and appear in the audit trail",
+    "color": "",
+    "bgcolor": "#d62728",
+    "className": "",
+    "icon": "block",
+    "iconPosition": "left",
+    "payload": "{\"value\": 5}",
+    "payloadType": "str",
+    "topic": "factory/lab/nucleo-h753zi/cmd/sample_01",
+    "topicType": "str",
+    "buttonColor": "#d62728",
+    "textColor": "",
+    "iconColor": "",
+    "enableClick": true,
+    "enablePointerdown": false,
+    "pointerdownPayload": "",
+    "pointerdownPayloadType": "str",
+    "enablePointerup": false,
+    "pointerupPayload": "",
+    "pointerupPayloadType": "str",
+    "wires": [
+      [
+        "out_cmd"
+      ]
+    ],
+    "x": 900,
+    "y": 1000,
+    "z": "tab_bridge"
+  },
+  {
+    "id": "tbl_audit",
+    "type": "ui-table",
+    "group": "g_audit",
+    "name": "audit",
+    "label": "",
+    "order": 1,
+    "width": "8",
+    "height": "6",
+    "maxrows": 10,
+    "passthru": false,
+    "autocols": false,
+    "showSearch": false,
+    "selectionType": "none",
+    "columns": [
+      {
+        "title": "Time",
+        "key": "time",
+        "keyType": "key",
+        "type": "text",
+        "width": "",
+        "align": "start"
+      },
+      {
+        "title": "Signal",
+        "key": "signal",
+        "keyType": "key",
+        "type": "text",
+        "width": "",
+        "align": "start"
+      },
+      {
+        "title": "Requested",
+        "key": "requested",
+        "keyType": "key",
+        "type": "text",
+        "width": "",
+        "align": "start"
+      },
+      {
+        "title": "Before",
+        "key": "previous",
+        "keyType": "key",
+        "type": "text",
+        "width": "",
+        "align": "start"
+      },
+      {
+        "title": "Result",
+        "key": "result",
+        "keyType": "key",
+        "type": "text",
+        "width": "",
+        "align": "start"
+      },
+      {
+        "title": "Reason",
+        "key": "reason",
+        "keyType": "key",
+        "type": "text",
+        "width": "",
+        "align": "start"
+      }
+    ],
+    "mobileBreakpoint": "sm",
+    "mobileBreakpointType": "defaults",
+    "action": "replace",
+    "x": 900,
+    "y": 1060,
+    "z": "tab_bridge",
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "f_audit",
+    "type": "function",
+    "name": "keep last 20",
+    "func": "const rows = context.get('rows') || [];\nconst r = msg.payload || {};\nrows.unshift({time: new Date(r.ts * 1000).toLocaleTimeString(), signal: r.signal,\n  requested: JSON.stringify(r.requested), previous: JSON.stringify(r.previous),\n  result: r.result, reason: r.reason || ''});\nrows.length = Math.min(rows.length, 20);\ncontext.set('rows', rows);\nreturn {payload: rows};",
+    "outputs": 1,
+    "wires": [
+      [
+        "tbl_audit"
+      ]
+    ],
+    "x": 600,
+    "y": 1120,
+    "z": "tab_bridge"
+  },
+  {
+    "id": "in_audit",
+    "type": "mqtt in",
+    "name": "audit",
+    "topic": "factory/lab/nucleo-h753zi/audit",
+    "qos": "1",
+    "datatype": "json",
+    "broker": "broker",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "wires": [
+      [
+        "f_audit"
+      ]
+    ],
+    "x": 250,
+    "y": 1180,
+    "z": "tab_bridge"
+  }
+]

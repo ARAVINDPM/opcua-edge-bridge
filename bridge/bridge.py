@@ -2,16 +2,18 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 from dataclasses import dataclass
 
 from asyncua import Client, ua
 
+from .audit import AuditLog
 from .core import (CommandError, ExceptionFilter, Sequencer, Signal, Topics,
                    build_payload, parse_command, state_payload)
 from .mqtt_sink import Sink
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 log = logging.getLogger("bridge")
 
 DEMO_OBJECT = "Demo"
@@ -25,6 +27,7 @@ class BridgeStats:
     suppressed: int = 0
     commands_ok: int = 0
     commands_rejected: int = 0
+    commands_failed: int = 0
 
 
 class _SubHandler:
@@ -41,7 +44,7 @@ class _SubHandler:
 class Bridge:
     def __init__(self, endpoint: str, signals: list[Signal], sink: Sink, topics: Topics,
                  namespace: str = NAMESPACE, heartbeat_s: float = 30.0,
-                 publish_interval_ms: int = 500) -> None:
+                 publish_interval_ms: int = 500, audit: AuditLog | None = None) -> None:
         self.endpoint = endpoint
         self.signals = {s.name: s for s in signals}
         self.sink = sink
@@ -56,6 +59,8 @@ class Bridge:
         self._sig_to_node: dict = {}
         self._loop: asyncio.AbstractEventLoop | None = None
         self._pending: set[asyncio.Task] = set()
+        self._last: dict[str, object] = {}
+        self.audit = audit or AuditLog(publish=lambda line: self.sink.publish(self.topics.audit, line))
 
     async def start(self) -> None:
         self._loop = asyncio.get_running_loop()
@@ -88,6 +93,7 @@ class Bridge:
         if sig is None:
             return
         self.stats.received += 1
+        self._last[sig.name] = value
         if not self.filter.should_publish(sig, value):
             self.stats.suppressed += 1
             return
@@ -97,12 +103,16 @@ class Bridge:
 
     # MQTT -> OPC UA
     def _on_command(self, topic: str, payload: bytes) -> None:
+        name = topic.rsplit("/", 1)[-1]
         try:
             sig, value = parse_command(self.topics, self.signals, topic, payload)
         except CommandError as e:
             self.stats.commands_rejected += 1
             log.warning("command rejected: %s", e)
+            self.audit.record(topic=topic, signal=name, requested=_preview(payload),
+                              previous=self._last.get(name), result="rejected", reason=str(e))
             return
+        previous = self._last.get(sig.name)
         node = self._sig_to_node[sig.name]
         vtype = {"bool": ua.VariantType.Boolean, "int": ua.VariantType.Int32,
                  "float": ua.VariantType.Double}.get(sig.dtype)
@@ -111,10 +121,37 @@ class Bridge:
         assert self._loop is not None
         task = asyncio.run_coroutine_threadsafe(coro, self._loop) if not _in_loop(self._loop) \
             else self._loop.create_task(coro)
+
+        def done(fut) -> None:
+            err = fut.exception()
+            if err is None:
+                self.stats.commands_ok += 1
+                self.audit.record(topic=topic, signal=sig.name, requested=value, previous=previous,
+                                  result="written")
+            else:
+                self.stats.commands_failed += 1
+                log.warning("write failed for %s: %s", sig.name, err)
+                self.audit.record(topic=topic, signal=sig.name, requested=value, previous=previous,
+                                  result="failed", reason=type(err).__name__)
+
+        task.add_done_callback(done)
         if isinstance(task, asyncio.Task):
             self._pending.add(task)
             task.add_done_callback(self._pending.discard)
-        self.stats.commands_ok += 1
+
+
+def _preview(payload: bytes, limit: int = 80):
+    """Best-effort readable form of a rejected payload (never trusted, only logged)."""
+    text = payload.decode("utf-8", errors="replace")
+    try:
+        obj = json.loads(text)
+        if isinstance(obj, dict) and set(obj) == {"value"}:
+            obj = obj["value"]
+        if isinstance(obj, (bool, int, float)) or obj is None:
+            return obj
+    except ValueError:
+        pass
+    return text if len(text) <= limit else text[:limit] + "..."
 
 
 def _in_loop(loop: asyncio.AbstractEventLoop) -> bool:

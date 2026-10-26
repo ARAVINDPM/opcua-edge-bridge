@@ -49,6 +49,10 @@ class Topics:
     def state(self) -> str:
         return f"{self.base}/state"
 
+    @property
+    def audit(self) -> str:
+        return f"{self.base}/audit"
+
 
 @dataclass
 class ExceptionFilter:

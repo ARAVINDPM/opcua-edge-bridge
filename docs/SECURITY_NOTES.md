@@ -9,7 +9,7 @@ These notes are not legal advice and not a compliance assessment. They record ho
 | OPC UA security policy | `None` (simulator; asyncua has no ECC policies) | Encrypted policy only by default (e.g. Basic256Sha256 or ECC_nistP256), `None` disabled or explicit opt-in |
 | Authentication | Anonymous | Certificates or user accounts; no default passwords |
 | MQTT | Plain TCP to a local broker | TLS, per-device credentials, topic ACLs |
-| Write-back | Allow-list + type checks, counted rejections | Plus an audit log, rate limits and role-based permissions |
+| Write-back | Allow-list + type checks + audit trail (JSONL + MQTT topic) | Plus user identity in the audit record, rate limits, role-based permissions and tamper-evident log storage |
 | Dependencies | Pinned in `requirements.txt`; SBOM in `sbom.cdx.json` | SBOM per release, vulnerability monitoring, documented patch process |
 | Updates | Manual | Signed updates, staged rollout, documented support period |
 

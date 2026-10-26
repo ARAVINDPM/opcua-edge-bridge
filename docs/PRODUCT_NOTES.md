@@ -43,6 +43,8 @@ Machines and plants speak OT protocols (OPC UA, Modbus, S7). Dashboards, analyti
 | Nothing writable by default | Least privilege; writes are the riskiest feature | Extra configuration for users who need writes |
 | Simulator before hardware | Unblocks development; makes tests reproducible | Simulator ≠ vendor firmware; must validate on the board |
 | Python + asyncua | Fast to prototype, readable | No ECC security policies; not a footprint for small devices |
+| Audit every write command, including rejected ones | A remote write is the riskiest action; operators and auditors need to see who changed what and what was refused | No user identity yet at MQTT level, so the record holds the topic, not a person |
+| Dashboard in Node-RED, not custom web code | Familiar tool for automation engineers; flows are inspectable and editable | Extra Node.js dependency for the demo |
 
 ## 6. Paying for lifelong updates: reading `tools/pricing_model.py`
 
@@ -60,6 +62,6 @@ The interesting product question is therefore not "which price" but **"which fea
 
 1. Run on the physical board. Record real node IDs, update rates and memory use.
 2. Store-and-forward buffer for broker outages, with backfill flagged as such.
-3. Audit log of all write commands (who, when, old and new value).
+3. ~~Audit log of all write commands~~ (done in 0.2.0). Next: add the user identity via per-client MQTT credentials.
 4. Compare with OPC UA PubSub over MQTT (Part 14) and Sparkplug B. When is a standard data model worth the extra complexity?
 5. Talk to two service engineers and one OT security person to test H1, H2 and H4.

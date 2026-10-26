@@ -9,6 +9,7 @@ import signal as os_signal
 
 from . import bridge as bridge_mod
 from .bridge import Bridge
+from .audit import AuditLog
 from .core import Signal, Topics, state_payload
 from .mqtt_sink import FakeBroker, PahoSink
 
@@ -29,8 +30,11 @@ def build(cfg: dict, dry_run: bool) -> Bridge:
                         topics.state, state_payload(False, bridge_mod.__version__), topics.cmd_wildcard,
                         m.get("username"), m.get("password"), m.get("tls", False))
     bridge_mod.DEMO_OBJECT = cfg.get("root_object", "Demo")
+    audit = AuditLog(cfg.get("audit_log", "logs/audit.jsonl"),
+                     publish=lambda line: sink.publish(topics.audit, line))
     return Bridge(cfg["endpoint"], signals, sink, topics, namespace=cfg.get("namespace", bridge_mod.NAMESPACE),
-                  heartbeat_s=cfg.get("heartbeat_s", 30.0), publish_interval_ms=cfg.get("publish_interval_ms", 500))
+                  heartbeat_s=cfg.get("heartbeat_s", 30.0), publish_interval_ms=cfg.get("publish_interval_ms", 500),
+                  audit=audit)
 
 
 async def run(cfg: dict, dry_run: bool, seconds: float | None) -> None:
@@ -65,6 +69,7 @@ def main() -> None:
     ap.add_argument("--seconds", type=float, default=None)
     args = ap.parse_args()
     logging.basicConfig(level=logging.INFO)
+    logging.getLogger("asyncua").setLevel(logging.WARNING)
     asyncio.run(run(load_config(args.config), args.dry_run, args.seconds))
 
 
